@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@trpc/server':
+        specifier: 11.0.0-rc.553
+        version: 11.0.0-rc.553
       express:
         specifier: ^4.21.0
         version: 4.21.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8
+      zod-openapi:
+        specifier: ^3.0.1
+        version: 3.0.1(zod@3.23.8)
     devDependencies:
       '@tilli-pro/eslint-config':
         specifier: ^2.0.2
@@ -425,6 +431,9 @@ packages:
     peerDependenciesMeta:
       '@vue/compiler-sfc':
         optional: true
+
+  '@trpc/server@11.0.0-rc.553':
+    resolution: {integrity: sha512-pYUhxV3QU834jP1ugJk1uhtPwwaY1ymIuupb4DiWOhNCl68syuXPlUdD8IYsYKd3BjLkmnjlsOUMoyd/aoOF/Q==}
 
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
@@ -2275,6 +2284,12 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod-openapi@3.0.1:
+    resolution: {integrity: sha512-JXDNGNDime+npDWW92Wve8K9GtK2E0/eut7TOKTqRN9+lvkBUPii67Dc9MAsS3fiiGDcmz5zmloakizX5X1n7Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.21.4
+
   zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
@@ -2718,6 +2733,8 @@ snapshots:
       prettier: 3.3.3
     transitivePeerDependencies:
       - supports-color
+
+  '@trpc/server@11.0.0-rc.553': {}
 
   '@types/body-parser@1.19.5':
     dependencies:
@@ -4838,5 +4855,9 @@ snapshots:
   yallist@3.1.1: {}
 
   yocto-queue@0.1.0: {}
+
+  zod-openapi@3.0.1(zod@3.23.8):
+    dependencies:
+      zod: 3.23.8
 
   zod@3.23.8: {}
