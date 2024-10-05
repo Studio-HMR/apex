@@ -1,0 +1,23 @@
+{
+  "name": "apex",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Ibrahim Saberi",
+  "license": "MIT",
+  "devDependencies": {
+    "@tilli-pro/eslint-config": "^2.0.2",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "zod": "^3.23.8"
+  }
+}
