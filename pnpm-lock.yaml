@@ -8,12 +8,21 @@ importers:
 
   .:
     dependencies:
+      '@sinclair/typebox':
+        specifier: ^0.33.15
+        version: 0.33.15
+      '@sinclair/typebox-codegen':
+        specifier: ^0.10.5
+        version: 0.10.5
       '@trpc/server':
         specifier: 11.0.0-rc.553
         version: 11.0.0-rc.553
       express:
         specifier: ^4.21.0
         version: 4.21.0
+      prismabox:
+        specifier: ^1.1.14
+        version: 1.1.14
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -414,11 +423,26 @@ packages:
     resolution: {integrity: sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
+  '@prisma/debug@5.20.0':
+    resolution: {integrity: sha512-oCx79MJ4HSujokA8S1g0xgZUGybD4SyIOydoHMngFYiwEwYDQ5tBQkK5XoEHuwOYDKUOKRn/J0MEymckc4IgsQ==}
+
+  '@prisma/generator-helper@5.20.0':
+    resolution: {integrity: sha512-37Aibw0wVRQgQVtCdNAIN71YFnSQfvetok7vd95KKkYkQRbEx94gsvPDpyN9Mw7p3IwA3nFgPfLc3jBRztUkKw==}
+
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
   '@rushstack/eslint-patch@1.10.4':
     resolution: {integrity: sha512-WJgX9nzTqknM393q1QJDJmoW28kUfEnybeTfVNcNAPnIx210RXm2DiXiHzfNPJNIUUb1tJnz/l4QGtJ30PgWmA==}
+
+  '@sinclair/typebox-codegen@0.10.5':
+    resolution: {integrity: sha512-McGmpMd/UzIes5FElHeZcfir/E+6L6v6hAOtaNX9v6d8lhDfGSMCOqdDTLWJVuo1tladpxCchKTfP+98L0STAQ==}
+
+  '@sinclair/typebox@0.32.35':
+    resolution: {integrity: sha512-Ul3YyOTU++to8cgNkttakC0dWvpERr6RYoHO2W47DLbFvrwBDJUY31B1sImH6JZSYc4Kt4PyHtoPNu+vL2r2dA==}
+
+  '@sinclair/typebox@0.33.15':
+    resolution: {integrity: sha512-R50kz7xohLjhwgmAiw+6qOAYkeFXsK8i1CbEQB1qJTiHMK5WywpvGIHJenE3n4t7dqj3bas+H1cD5dTZIfrAEw==}
 
   '@tilli-pro/eslint-config@2.0.2':
     resolution: {integrity: sha512-73Wtnh1uCd/dl7wZJ4DJ3n3JIhuCOIqVAx/MixKDT0Rh55B9PJqeqQv2CE60p0uuN3BuQQmACGA5ClpfJxCWMw==}
@@ -1870,9 +1894,18 @@ packages:
       prettier-plugin-svelte:
         optional: true
 
+  prettier@2.8.8:
+    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+
   prettier@3.3.3:
     resolution: {integrity: sha512-i2tDNA0O5IrMO757lfrdQZCc2jPNDVntV0m/+4whiDfWaTKfMNgR7Qz0NAeGz/nRqF4m5/6CLzbP4/liHt12Ew==}
     engines: {node: '>=14'}
+    hasBin: true
+
+  prismabox@1.1.14:
+    resolution: {integrity: sha512-Ewk85Sl9MWu05+xgUPOIfAPoF8Nr6IfcRQeYN+EQNnp6MwsbbV11Grft1zFe8yOA1bEYeo8k/4p0F+3Q4nL2dQ==}
     hasBin: true
 
   prop-types@15.8.1:
@@ -2673,9 +2706,25 @@ snapshots:
 
   '@pkgr/core@0.1.1': {}
 
+  '@prisma/debug@5.20.0': {}
+
+  '@prisma/generator-helper@5.20.0':
+    dependencies:
+      '@prisma/debug': 5.20.0
+
   '@rtsao/scc@1.1.0': {}
 
   '@rushstack/eslint-patch@1.10.4': {}
+
+  '@sinclair/typebox-codegen@0.10.5':
+    dependencies:
+      '@sinclair/typebox': 0.33.15
+      prettier: 2.8.8
+      typescript: 5.6.2
+
+  '@sinclair/typebox@0.32.35': {}
+
+  '@sinclair/typebox@0.33.15': {}
 
   '@tilli-pro/eslint-config@2.0.2':
     dependencies:
@@ -4363,7 +4412,15 @@ snapshots:
       '@ianvs/prettier-plugin-sort-imports': 4.3.1(prettier@3.3.3)
       '@trivago/prettier-plugin-sort-imports': 4.3.0(prettier@3.3.3)
 
+  prettier@2.8.8: {}
+
   prettier@3.3.3: {}
+
+  prismabox@1.1.14:
+    dependencies:
+      '@prisma/generator-helper': 5.20.0
+      '@sinclair/typebox': 0.32.35
+      prettier: 3.3.3
 
   prop-types@15.8.1:
     dependencies:
