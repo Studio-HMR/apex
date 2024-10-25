@@ -1,112 +1,136 @@
-import { CreateContextCallback, TRPCBuilder, initTRPC } from "@trpc/server";
-import "@trpc/server";
-import type { Http2ServerRequest, Http2ServerResponse } from "node:http2";
-import { createServer } from "node:http2";
-import { z } from "zod";
+import type { Static, TSchema } from "@sinclair/typebox";
+import { Type } from "@sinclair/typebox";
+import type { Request, Response } from "express";
+import express from "express";
 
-type PathSeparator = "/";
-type QuerySeparator = "?";
-type QueryParamSeparator = "&";
-type PathParamSeparator = ":";
-type BasePath = `${PathSeparator}${string}`;
-type PathParam = `${PathSeparator}${PathParamSeparator}${string}`;
-type PathParts<T extends string> =
-  T extends `${infer Head}${PathSeparator}${infer Tail}`
-    ? [Head, ...PathParts<Tail>]
-    : [T];
+import { HTTPMethod, SwitchHTTPMethod } from "./http/http-types";
 
-type PathObj<T extends string> = {
-  path: T;
+type CreateCtxArgs = {
+  req: Request;
+  res: Response;
 };
 
-const f = "/asdf/fds/fdsasdf";
-type P = PathParts<typeof f>;
+type CreateCtxFn<Ctx> = (args: CreateCtxArgs) => MaybePromise<Ctx>;
 
-type FirstQueryParam = `?${string}`;
-type RestQueryParam = `&${string}`;
-type QueryParam = FirstQueryParam | RestQueryParam;
-
-type Path = `${BasePath}` | `${BasePath}${PathParam}`;
-
-interface CreateCtxParams {
-  req: Http2ServerRequest;
-  res: Http2ServerResponse;
-}
 type MaybePromise<T> = T | Promise<T>;
-type CreateCtxFn<Ctx extends object> = (
-  params: CreateCtxParams,
-) => MaybePromise<Ctx>;
 
-interface ApexInit<CtxInit extends object> {
-  createCtx: CreateCtxFn<CtxInit>;
-}
-
-type InitTrpc<CtxInit extends object> = ReturnType<
-  ReturnType<typeof initTRPC.context<CtxInit>>["create"]
->;
-
-const createCtx = async ({ req, res }: CreateCtxParams) => {
-  return {
-    host: "",
+type SecurityScheme = {
+  type: "apiKey" | "http" | "oauth2" | "openIdConnect";
+  name?: string;
+  in?: "query" | "header" | "cookie";
+  scheme?: string;
+  bearerFormat?: string;
+  flows?: {
+    implicit?: {
+      authorizationUrl: string;
+      refreshUrl?: string;
+      scopes: Record<string, string>;
+    };
+    password?: {
+      tokenUrl: string;
+      refreshUrl?: string;
+      scopes: Record<string, string>;
+    };
+    clientCredentials?: {
+      tokenUrl: string;
+      refreshUrl?: string;
+      scopes: Record<string, string>;
+    };
+    authorizationCode?: {
+      authorizationUrl: string;
+      tokenUrl: string;
+      refreshUrl?: string;
+      scopes: Record<string, string>;
+    };
   };
+  openIdConnectUrl?: string;
 };
 
-class Apex<CtxInit extends object, Routes extends any> {
-  private createCtx: CreateCtxFn<CtxInit>;
-  private t: InitTrpc<CtxInit>;
-  private routes: Map<Path, any> = new Map<Path, any>();
-  private middlewares: Map<string, any> = new Map<string, any>();
+type AppParams<SchemeNames extends string> = {
+  expressAppSettings: Record<string, unknown>;
+  securitySchemes: Record<SchemeNames, SecurityScheme>;
+  basePath: string;
+  port: number;
+};
 
-  constructor(private init: ApexInit<CtxInit>) {
-    this.createCtx = init.createCtx;
-    this.t = initTRPC.context<typeof createCtx>().meta().create();
-    this.t._config.$types.ctx;
+const DEFAULT_PARAMS: AppParams<string> = {
+  expressAppSettings: {},
+  securitySchemes: {},
+  basePath: "/",
+  port: 3000,
+};
+
+const buildMethodDefs = <InCtx>() => {};
+
+class ApexBuilder<
+  Params extends AppParams<Schemes>,
+  Schemes extends string = string,
+  InCtx extends object = {},
+> {
+  createContext: CreateCtxFn<InCtx>;
+  params: Params;
+
+  constructor(params?: Params, createContextFn?: CreateCtxFn<InCtx>) {
+    this.createContext = createContextFn || (() => ({}) as InCtx);
+    this.params = params ?? (DEFAULT_PARAMS as Params);
   }
 
-  public async start(port: number = 3000, listeningListener?: () => void) {
-    const app = createServer(async (req, res) => {
-      const ctx = () => this.createCtx({ req, res });
-      // if (ctx instanceof Promise) {
-      //   ctx = (await ctx) as CtxInit;
-      // }
-
-      const callerCreation = this.t.createCallerFactory(
-        this.t.router({
-          asdf: this.t.router({
-            asdf2: this.t.procedure.input(z.string()).query((input) => {
-              return null;
-            }),
-          }),
-        }),
-      );
-      callerCreation(ctx);
-
-      const path = req.url;
-      const route = this.routes.get(path as Path);
-      if (route) {
-        res.writeHead(200);
-      } else {
-        res.writeHead(404);
-        res.end("Not found");
-      }
-    });
-
-    app.listen(port, listeningListener);
+  appParams<NewParams extends AppParams<NewSchemes>, NewSchemes extends string>(
+    params: NewParams,
+  ) {
+    return new ApexBuilder<NewParams, NewSchemes, InCtx>(
+      params,
+      this.createContext,
+    );
   }
 
-  router = async () => {
-    this.t.router({});
-  };
+  context<NewCtx extends object>(createContextFn: CreateCtxFn<NewCtx>) {
+    return new ApexBuilder<Params, Schemes, NewCtx>(
+      this.params,
+      createContextFn,
+    );
+  }
 
-  route = async () => {};
+  create() {
+    const app = express();
 
-  middleware = async () => {};
+    for (const [key, value] of Object.entries(this.params.expressAppSettings)) {
+      app.set(key, value);
+    }
+
+    return {
+      _expressApp: app,
+      get: (path: string, handler: (ctx: InCtx) => unknown) => {
+        app.get(path, async (req, res) => {
+          const ctx = await this.createContext({ req, res });
+          const result = await handler(ctx);
+          res.json(result);
+        });
+      },
+      listen: () => {
+        app.listen(this.params.port);
+      },
+    };
+  }
 }
 
-const apex = new Apex({
-  createCtx: async ({ req, res }) => {
-    return {
-      host: req.headers["hostname"],
-    };
-  },
-});
+// const apexInit = new ApexBuilder();
+
+// const apex = apexInit
+//   .context(({ req, res }) => {
+//     return {
+//       ip: req.ip,
+//     };
+//   })
+//   .create();
+
+// apex.get("/", (ctx) => {
+//   return ctx.ip;
+// });
+
+// (async () => {
+//   apex.listen();
+//   const res = await fetch("http://localhost:3000/");
+//   const json = await res.json();
+//   console.log(json);
+// })();
