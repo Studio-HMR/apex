@@ -1,18 +1,8 @@
-import {
-  type Static,
-  type TSchema,
-  type TString,
-  Type,
-} from "@sinclair/typebox";
+import { type Static, type TNever, type TSchema } from "@sinclair/typebox";
 import { MaybePromise } from "@trpc/server/unstable-core-do-not-import";
 
 import type { PathParams, ToValidPath, ValidPath } from "./http-path-types";
-import type {
-  HTTPGet,
-  HTTPMethod,
-  HTTPPost,
-  SwitchHTTPMethod,
-} from "./http-types";
+import type { HTTPMethod, SwitchHTTPMethod } from "./http-types";
 
 type HandlerParams<
   Method extends HTTPMethod,
@@ -156,3 +146,11 @@ export type HTTPMethodDef<
   >;
   (): _HTTPMethodDef<Method, BasePath, InCtx, InSchema, OutSchema>;
 };
+
+export type AnyHTTPMethodDef = HTTPMethodDef<
+  HTTPMethod,
+  ValidPath,
+  object,
+  TSchema,
+  TSchema
+>;
