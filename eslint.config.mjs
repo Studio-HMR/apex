@@ -1,5 +1,8 @@
 import tsx from "@tilli-pro/eslint-config/tsx-base.mjs";
 
+/**
+ * @type {import("eslint").Linter.FlatConfig}
+ */
 export default [
   ...tsx,
   {
@@ -8,5 +11,8 @@ export default [
         project: "./tsconfig.lint.json",
       },
     },
+    rules: {
+      
+    }
   },
 ];

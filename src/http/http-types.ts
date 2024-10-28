@@ -1,11 +1,20 @@
-export type HTTPGet = "GET";
-export type HTTPPost = "POST";
-export type HTTPPut = "PUT";
-export type HTTPDelete = "DELETE";
 export type HTTPAll = "ALL";
 
-export type HTTPMethod = HTTPGet | HTTPPost | HTTPPut | HTTPDelete;
+export const httpTypes = ["GET", "POST", "PUT", "DELETE"] as const;
 
+/**
+ * @public
+ */
+export type HTTPMethod = (typeof httpTypes)[number];
+
+export type HTTPGet = (typeof httpTypes)[0];
+export type HTTPPost = (typeof httpTypes)[1];
+export type HTTPPut = (typeof httpTypes)[2];
+export type HTTPDelete = (typeof httpTypes)[3];
+
+/**
+ * @internal
+ */
 export type SwitchHTTPMethod<
   /**
    * The HTTP method to switch on.
