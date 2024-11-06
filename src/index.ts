@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 import type { Request, Response } from "express";
 import express from "express";
 
-import { HTTPMethod, SwitchHTTPMethod } from "./http/http-types";
+import { HTTPMethod, SwitchHTTPMethod } from "./core/http-types";
 
 type CreateCtxArgs = {
   req: Request;

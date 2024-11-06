@@ -1,14 +1,12 @@
-import { type Static, type TSchema, TString } from "@sinclair/typebox";
 import { MaybePromise } from "@trpc/server/unstable-core-do-not-import";
 
-import type { PathParams, ToValidPath, ValidPath } from "./http-path-types";
+import type { ValidPath } from "./http-path-types";
 import type {
   HTTPDelete,
   HTTPGet,
   HTTPMethod,
   HTTPPost,
   HTTPPut,
-  SwitchHTTPMethod,
 } from "./http-types";
 
 /**
@@ -20,7 +18,8 @@ export interface HTTPMethodOptions {
 }
 
 interface BuiltMethodDef {
-  controllerInput: unknown;
+  path: ValidPath;
+  params: unknown;
   input: unknown;
   output: unknown;
 }
@@ -39,7 +38,8 @@ export interface HTTPHandler<
 > {
   _def: {
     $types: {
-      controllerInput: HTTPDef["controllerInput"];
+      path: HTTPDef["path"];
+      params: HTTPDef["params"];
       input: HTTPDef["input"];
       output: HTTPDef["output"];
     };
@@ -57,7 +57,7 @@ export interface HTTPErrorHandlerOptions<InCtx> {
   method: HTTPMethod;
   path: string | unknown;
   input: unknown;
-  controllerInput: unknown;
+  params: unknown;
   ctx: InCtx | undefined;
 }
 
@@ -88,4 +88,5 @@ export type inferHandlerIO<Handler> = inferHandlerParams<Handler>["$types"];
 export type inferHandlerInput<Handler> = inferHandlerIO<Handler>["input"];
 export type inferHandlerOutput<Handler> = inferHandlerIO<Handler>["output"];
 export type inferHandlerControllerInput<Handler> =
-  inferHandlerIO<Handler>["controllerInput"];
+  inferHandlerIO<Handler>["params"];
+export type inferHandlerPath<Handler> = inferHandlerIO<Handler>["path"];
