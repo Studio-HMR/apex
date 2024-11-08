@@ -199,3 +199,7 @@ const f: ApiResponse<
   stackTrace: null,
   external: false,
 };
+
+export type ISODateString =
+  `${number}-${number}-${number}T${number}:${number}:${number}.${number}Z`;
+export type JSONDate = ISODateString | Date;

@@ -2,8 +2,11 @@ export type PartialIf<Cond extends boolean, T> = Cond extends true
   ? Partial<T>
   : T;
 
+export const set = Symbol("set");
+export type SetMarker = typeof set;
+
 export const unset = Symbol("unset");
-export type Unset = typeof unset;
+export type UnsetMarker = typeof unset;
 
 export type ValueOf<Obj> = Obj[keyof Obj];
 
@@ -80,12 +83,12 @@ export type InvertKeyValue<TType extends Record<PropertyKey, PropertyKey>> = {
   [TValue in TType[keyof TType]]: KeyFromValue<TValue, TType>;
 };
 
-export type IntersectIfDefined<TType, TWith> = TType extends Unset
+export type IntersectIfDefined<TType, TWith> = TType extends SetMarker
   ? TWith
-  : TWith extends Unset
+  : TWith extends SetMarker
     ? TType
     : Simplify<TType & TWith>;
-``;
-export type DefaultValue<TValue, TFallback> = TValue extends Unset
+
+export type DefaultValue<TValue, TFallback> = TValue extends SetMarker
   ? TFallback
   : TValue;

@@ -1,47 +1,114 @@
-import { Static, TObject, TSchema } from "@sinclair/typebox";
+import { Static, TObject, TSchema, Type } from "@sinclair/typebox";
 
-import { PathParams, ValidPath } from "./http-path-types";
-import { HTTPMethod } from "./http-types";
+import { DotNotationPrim, DotNotationType } from "../utils/json-path";
+import { MaybePromise, SetMarker, UnsetMarker } from "../utils/types";
+import { PathParams, ToValidPath, ValidPath } from "./http-path-types";
+import { HTTPGet, HTTPMethod, HTTPPost } from "./http-types";
 
 // apex.scheme().controller("", ({ get, post, put, delete, input, output, use, route }) => {
 //   asdf: use().input().output().get(({ ctx, input, query, params }) => {})
 // })
 
-const buildControllerDef = () => {
+const buildNewController = <Context, Meta>(_def?: AnyControllerDef) => {
+  const newDef = _def
+    ? {
+        ..._def,
+      }
+    : {};
   return {
-    scheme: (schema: TSchema) => {
+    _def: {},
+    scheme: <NewSchema extends TSchema>(schema: NewSchema) => {
       return {
         controller: () => {},
       };
     },
-    controller: (
-      pathOrRouteDef: ValidPath | ((routeDefiners: { get: () => {} }) => {}),
-      routeDef?: (routeDefiners: { get: () => {} }) => {},
+    controller: <
+      Path extends ValidPath,
+      RouterDef extends Record<string, AnyRouteDefBuilder>,
+    >(
+      pathOrRouteDef: Path | ((routerDefiners: { get: () => {} }) => {}),
+      routerDef?: (routeDefiners: RouteDefBuilder<"/">) => {},
     ) => {},
   };
 };
-const buildControllerHandler = (
-  path: ValidPath | undefined,
-  schema: TSchema | undefined,
-) => {};
 
-type ControllerDef = {
-  (path: ValidPath, routeDefs: Function): unknown;
-  (routeDefs: Function): unknown;
+type ControllerDefBuilder<
+  Path extends ValidPath,
+  Schema extends TSchema | UnsetMarker,
+  Context,
+  Meta,
+  Def extends AnyControllerDef,
+> = {
+  _def: Def;
+  scheme: Schema extends UnsetMarker
+    ? <NewSchema extends TSchema>(
+        schema: NewSchema,
+      ) => ControllerDefBuilder<Path, NewSchema, Context, Meta, Def>
+    : never;
+  controller: ControllerHandler<Path, Schema, Context, Meta>;
 };
 
-type RouteDefBuilder = {
-  get: () => {};
-  post: () => {};
-  put: () => {};
-  delete: () => {};
-  input: () => {};
-  output: () => {};
-  use: () => {};
+type AnyControllerDefBuilder = ControllerDefBuilder<
+  ValidPath,
+  any,
+  any,
+  any,
+  any
+>;
+
+type ControllerDef<
+  Path extends ValidPath,
+  Schema extends TSchema | UnsetMarker,
+  Context,
+  Meta,
+  RouteDef extends AnyRouterDef,
+> = {
+  $path: Path;
+  $router: RouteDef;
+  $types: {
+    ctx: Context;
+    meta: Meta;
+    input: Schema extends UnsetMarker ? TObject : Schema;
+    output: Schema extends UnsetMarker ? TObject : Schema;
+  };
 };
 
-type RouteHandler = {
-  (): void;
+type AnyControllerDef = ControllerDef<ValidPath, any, any, any, any>;
+type AnyRouterDef = Record<string, AnyRouteDefBuilder | AnyControllerDef>;
+
+type ControllerHandler<
+  Path extends ValidPath,
+  Schema extends TSchema | UnsetMarker,
+  Context,
+  Meta,
+> = {
+  <RouterDef extends AnyRouterDef>(
+    path: Path,
+    routerDef: (
+      builder: RouteDefBuilder<
+        Path,
+        Context,
+        Meta,
+        Schema,
+        UnsetMarker,
+        Schema,
+        UnsetMarker
+      >,
+    ) => RouterDef,
+  ): ControllerDef<Path, Schema, Context, Meta, RouterDef>;
+  <RouterDef extends AnyRouterDef>(
+    routerDef: (
+      builder: RouteDefBuilder<
+        "/",
+        Context,
+        Meta,
+        Schema,
+        UnsetMarker,
+        Schema,
+        UnsetMarker
+      >,
+    ) => RouterDef,
+  ): ControllerDef<Path, Schema, Context, Meta, RouterDef>;
 };
 
 type RouteDef = {};
@@ -58,7 +125,6 @@ type RouteHandlerDef<
     path: Path;
     method: Method;
   };
-
   $types: {
     ctx: Context;
     meta: Meta;
@@ -67,16 +133,19 @@ type RouteHandlerDef<
   };
 };
 
-type Query<Schema extends TSchema> = {
-  [K in keyof Static<Schema>]: Static<Schema>[K];
+type BaseQuery<Schema extends TSchema> = {
+  [K in keyof Static<Schema>]?: Static<Schema>[K];
 };
 
 type DotNotationQuery<Schema extends TObject> = {
-  [K in DotNotation<Static<Schema>>]: DotNotationType<Static<Schema>, K>;
+  [K in DotNotationPrim<Static<Schema>>]?: DotNotationType<Static<Schema>, K>;
 };
 
+type Query<Schema extends TObject> = BaseQuery<Schema> &
+  DotNotationQuery<Schema>;
+
 type Sort<Schema extends TSchema> = {
-  [K in keyof Static<Schema>]: "asc" | "desc";
+  [K in keyof Static<Schema>]?: "asc" | "desc";
 };
 
 type Pagination = {
@@ -85,9 +154,9 @@ type Pagination = {
 };
 
 type QueryParams<Schema extends TObject> = {
-  query: Query<Schema> & DotNotationQuery<Schema>;
+  query: Query<Schema>;
   sort: Sort<Schema>;
-  pagination: Pagination;
+  pagination?: Pagination;
 };
 
 type RouteHandlerOpts<Path extends ValidPath, Context, Input> = {
@@ -95,78 +164,155 @@ type RouteHandlerOpts<Path extends ValidPath, Context, Input> = {
   ctx: Context;
   input: Input extends TSchema ? Input : never;
   params: PathParams<Path>;
-  query: Input extends TObject ? QueryParams<Input> : never;
-};
-
-type JSONPathParts<
-  Path extends string,
-  FirstTail = true,
-> = Path extends `${infer Head}.${infer Tail}`
-  ? { [Key in Head]: { [Key in Tail]: JSONPathParts<Tail, false> } }
-  : FirstTail extends true
-    ? never
-    : unknown;
-
-type IsValidJsonPath<ObjectType, JSONPath extends string> =
-  ObjectType extends JSONPathParts<JSONPath> ? true : false;
-
-const c = {
-  asdf: {
-    fds: 0,
-  },
-  fddd: {},
-};
-
-const validPath = { "asdf.fds": 0 };
-const invalidPath = { fdd: "" };
-
-type Valid = IsValidJsonPath<typeof c, "asdf.fds">;
-type Invalid = IsValidJsonPath<typeof c, "fdd">;
-
-export type DotNotation<T extends Record<string, unknown>> = {
-  [K in keyof T & string]: T[K] extends Record<string, unknown>
-    ? T[K] extends any[] | Date
-      ? K // skip arrays (to prevent indexing numeric properties)
-      : `${K}.${DotNotation<T[K]>}` | K
-    : K;
-}[keyof T & string];
-
-type DotNotationType<
-  T extends object,
-  Path extends string,
-> = Path extends `${infer Head}.${infer Tail}`
-  ? Head extends keyof T
-    ? T[Head] extends object
-      ? DotNotationType<T[Head], Tail>
-      : never
-    : never
-  : Path extends keyof T
-    ? T[Path]
+  query: Input extends TSchema
+    ? Input extends TObject
+      ? QueryParams<Input>
+      : string
     : never;
-
-type D = {
-  asdf: {
-    fds: {
-      jkl: number;
-      ppp: string;
-    };
-    ff: number;
-    d: Date;
-  };
-  chr: {
-    d: {
-      b: string;
-    };
-    f: {
-      a: string;
-    };
-  };
 };
 
-type Dot = DotNotation<D>;
-type T = DotNotationType<D, "asdf.fds.jkl">;
+type RouteHandlerFn<Path extends ValidPath, Context, Input, Output> = (
+  opts: RouteHandlerOpts<Path, Context, Input>,
+) => MaybePromise<Output>;
 
-type ISODateString =
-  `${number}-${number}-${number}T${number}:${number}:${number}.${number}Z`;
+type RouteHandler<
+  BasePath extends ValidPath,
+  Method extends HTTPMethod,
+  Context,
+  Meta,
+  Input,
+  Output,
+> = {
+  <Path extends ValidPath>(
+    path: Path,
+    handler: RouteHandlerFn<
+      ToValidPath<`${BasePath}${Path}`>,
+      Context,
+      Input,
+      Output
+    >,
+  ): RouteHandlerDef<
+    ToValidPath<`${BasePath}${Path}`>,
+    Method,
+    Context,
+    Meta,
+    Input,
+    Output
+  >;
+  (
+    handler: RouteHandlerFn<BasePath, Context, Input, Output>,
+  ): RouteHandlerDef<BasePath, Method, Context, Meta, Input, Output>;
+};
 
-type JSONDate = ISODateString | Date;
+type InputDef<
+  BasePath extends ValidPath,
+  Context,
+  Meta,
+  Input,
+  InputOverride,
+  Output,
+  OutputOverride,
+> = InputOverride extends UnsetMarker
+  ? {
+      input: <NewInput>(
+        schema: NewInput,
+      ) => RouteDefBuilder<
+        BasePath,
+        Context,
+        Meta,
+        Input,
+        NewInput,
+        Output,
+        OutputOverride
+      >;
+    }
+  : {};
+
+type OutputDef<
+  BasePath extends ValidPath,
+  Context,
+  Meta,
+  Input,
+  InputOverride,
+  Output,
+  OutputOverride,
+> = OutputOverride extends UnsetMarker
+  ? {
+      output: <NewOutput>(
+        schema: NewOutput,
+      ) => RouteDefBuilder<
+        BasePath,
+        Context,
+        Meta,
+        Input,
+        InputOverride,
+        Output,
+        NewOutput
+      >;
+    }
+  : {};
+
+type HTTPHandlerDef<
+  BasePath extends ValidPath,
+  Context,
+  Meta,
+  Input,
+  InputOverride,
+  Output,
+  OutputOverride,
+> = {
+  [Method in Lowercase<HTTPMethod>]: RouteHandler<
+    BasePath,
+    Uppercase<Method>,
+    Context,
+    Meta,
+    InputOverride extends UnsetMarker ? Input : InputOverride,
+    OutputOverride extends UnsetMarker ? Output : OutputOverride
+  >;
+};
+
+type RouteDefBuilder<
+  BasePath extends ValidPath,
+  Context,
+  Meta,
+  Input,
+  InputOverride,
+  Output,
+  OutputOverride,
+> = HTTPHandlerDef<
+  BasePath,
+  Context,
+  Meta,
+  Input,
+  InputOverride,
+  Output,
+  OutputOverride
+> &
+  InputDef<
+    BasePath,
+    Context,
+    Meta,
+    Input,
+    InputOverride,
+    Output,
+    OutputOverride
+  > &
+  OutputDef<
+    BasePath,
+    Context,
+    Meta,
+    Input,
+    InputOverride,
+    Output,
+    OutputOverride
+  >;
+
+type AnyRouteDefBuilder = RouteDefBuilder<
+  ValidPath,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+>;
