@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/**/*", "*.config.mjs", "zod-prisma-types/**/*"],
+  "include": ["src/**/*", "*.config.mjs", "express.d.ts"],
 }

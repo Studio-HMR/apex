@@ -1,4 +1,6 @@
-export const ERROR_SYM = Symbol("ERROR_SYM");
+import { apexSym } from "../utils/symbol";
+
+export const ERROR_SYM = Symbol(apexSym("ERROR_SYM"));
 
 export const ERROR_CODES = {
   // 400
@@ -50,15 +52,18 @@ export interface ServerError<Code extends ErrorCode> extends Error {
   data?: unknown;
 }
 
-export class AError extends Error {
-  [ERROR_SYM] = true;
-  code: ErrorCode;
-  status: number;
+export class ApexError<Code extends ErrorCode>
+  extends Error
+  implements ServerError<Code>
+{
+  [ERROR_SYM] = true as const;
+  code: Code;
+  status: (typeof ERROR_CODES)[Code];
   localizedDescription: string;
   data?: unknown;
 
   constructor(
-    code: ErrorCode,
+    code: Code,
     message: string,
     localizedDescription: string,
     data?: unknown,
@@ -70,3 +75,8 @@ export class AError extends Error {
     this.data = data;
   }
 }
+
+export const isServerError = (
+  error: unknown,
+): error is ServerError<ErrorCode> =>
+  error instanceof ApexError && ERROR_SYM in error && error[ERROR_SYM] === true;

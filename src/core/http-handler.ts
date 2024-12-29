@@ -15,6 +15,7 @@ const buildNewController = <Context, Meta>(_def?: AnyControllerDef) => {
         ..._def,
       }
     : {};
+
   return {
     _def: {},
     scheme: <NewSchema extends TSchema>(schema: NewSchema) => {
@@ -27,7 +28,17 @@ const buildNewController = <Context, Meta>(_def?: AnyControllerDef) => {
       RouterDef extends Record<string, AnyRouteDefBuilder>,
     >(
       pathOrRouteDef: Path | ((routerDefiners: { get: () => {} }) => {}),
-      routerDef?: (routeDefiners: RouteDefBuilder<"/">) => {},
+      routerDef?: (
+        routeDefiners: RouteDefBuilder<
+          "/",
+          Context,
+          Meta,
+          unknown,
+          unknown,
+          unknown,
+          unknown
+        >,
+      ) => {},
     ) => {},
   };
 };

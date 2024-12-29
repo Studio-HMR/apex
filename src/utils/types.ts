@@ -1,12 +1,17 @@
+import type { IsSet } from "./symbol";
+
+export type Primitive =
+  | string
+  | number
+  | bigint
+  | boolean
+  | symbol
+  | null
+  | undefined;
+
 export type PartialIf<Cond extends boolean, T> = Cond extends true
   ? Partial<T>
   : T;
-
-export const set = Symbol("set");
-export type SetMarker = typeof set;
-
-export const unset = Symbol("unset");
-export type UnsetMarker = typeof unset;
 
 export type ValueOf<Obj> = Obj[keyof Obj];
 
@@ -83,12 +88,47 @@ export type InvertKeyValue<TType extends Record<PropertyKey, PropertyKey>> = {
   [TValue in TType[keyof TType]]: KeyFromValue<TValue, TType>;
 };
 
-export type IntersectIfDefined<TType, TWith> = TType extends SetMarker
+export type IntersectIfDefined<TType, TWith> = TType extends IsSet
   ? TWith
-  : TWith extends SetMarker
+  : TWith extends IsSet
     ? TType
     : Simplify<TType & TWith>;
 
-export type DefaultValue<TValue, TFallback> = TValue extends SetMarker
+export type DefaultValue<TValue, TFallback> = TValue extends IsSet
   ? TFallback
   : TValue;
+
+export type StringKey<K extends string | number | symbol> = K extends
+  | string
+  | number
+  ? K
+  : "SYMBOL";
+
+export type JsonPaths<
+  T extends Record<string, unknown>,
+  Prefix extends string = "",
+  IncludeParents extends boolean = true,
+  Separator extends string = ".",
+> = {
+  [K in keyof T]: T[K] extends Primitive
+    ? `${Prefix}${StringKey<K>}`
+    : T[K] extends Array<infer S>
+      ? S extends Primitive | Date
+        ? `${Prefix}${StringKey<K>}${Separator}[]`
+        : S extends Record<string, unknown>
+          ? JsonPaths<
+              S,
+              `${Prefix}${StringKey<K>}${Separator}`,
+              IncludeParents,
+              Separator
+            >
+          : `${Prefix}${StringKey<K>}${Separator}?`
+      : T[K] extends Record<string, unknown>
+        ? JsonPaths<
+            T[K],
+            `${Prefix}${StringKey<K>}${Separator}`,
+            IncludeParents,
+            Separator
+          >
+        : never;
+}[keyof T];

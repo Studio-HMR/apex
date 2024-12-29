@@ -6,7 +6,7 @@ import {
   MaybePromise,
   Overwrite,
   Simplify,
-  Unset,
+  UnsetMarker,
 } from "../utils/types";
 import { AnyHTTPHandler, HTTPHandler } from "./http-handler-types";
 import { PathParams, ValidPath } from "./http-path-types";
@@ -29,7 +29,7 @@ export type HandlerOverride<Path extends ValidPath, Ctx> = (opts: {
 
 export interface HandlerResolverOptions<Ctx, Input> {
   ctx: Simplify<Ctx>;
-  input: Input extends Unset ? undefined : Input;
+  input: Input extends UnsetMarker ? undefined : Input;
   signal: AbortSignal | undefined;
 }
 
@@ -64,7 +64,7 @@ export interface HandlerBuilder<
   AsCaller extends boolean,
 > {
   input<Schema extends TSchema>(
-    schema: Input extends Unset ? Schema : never,
+    schema: Input extends UnsetMarker ? Schema : never,
   ): HandlerBuilder<
     Path,
     Method,
@@ -74,7 +74,7 @@ export interface HandlerBuilder<
     AsCaller
   >;
   output<Schema extends TSchema>(
-    schema: Schema extends Unset ? Output : never,
+    schema: Schema extends UnsetMarker ? Output : never,
   ): HandlerBuilder<
     Path,
     Method,
