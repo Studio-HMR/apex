@@ -1,5 +1,6 @@
 import { TSchema } from "@sinclair/typebox";
 
+import { IsUnset } from "../utils/symbol";
 import { BaseDef } from "./def";
 import { ValidPath } from "./http-path-types";
 import { HTTPMethod } from "./http-types";
@@ -26,7 +27,7 @@ type Handler<
   $Output,
 > = {
   _def: HandlerDef<$Path, $Method, $Context, $Meta, $Input, $Output>;
-  (): Promise<$Output>;
+  (): Promise<$Output extends IsUnset ? unknown : $Output>;
 };
 
 interface HandlerBuilderDef {
@@ -42,7 +43,7 @@ interface HandlerBuilder<
   Input,
   Output,
 > {
-  use<NewContext, NewMeta, NewInput, NewOutput>(): void;
+  use<NewContext, NewMeta, NewInput>(): void;
   input<I extends TSchema[]>(
     ...inputs: I
   ): HandlerBuilder<
@@ -65,5 +66,9 @@ interface HandlerBuilder<
     Input,
     O[number] | Output
   >;
-  handle(): void;
+  handle(handlerInput: {
+    ctx: Context;
+    meta: Meta;
+    input: Input extends IsUnset ? never : Input;
+  }): Handler<$Path, $Method, Context, Meta, Input, Output>;
 }
