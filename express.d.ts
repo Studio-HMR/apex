@@ -1,7 +1,5 @@
 declare namespace Express {
-  interface Request {
-    asdf: string;
-  }
+  interface Request {}
 
   interface Response {}
 }

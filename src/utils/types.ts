@@ -1,4 +1,6 @@
-import type { IsSet } from "./symbol";
+import { Static, TSchema } from "@sinclair/typebox";
+
+import type { IsSet, IsUnset } from "./symbol";
 
 export type Primitive =
   | string
@@ -64,6 +66,8 @@ export type Overwrite<TType, TWith> = TWith extends any
     : TWith
   : never;
 
+export type Rewrite<TType, TWith> = Simplify<Overwrite<TType, TWith>>;
+
 export type ValidateShape<TActualShape, TExpectedShape> =
   TActualShape extends TExpectedShape
     ? Exclude<keyof TActualShape, keyof TExpectedShape> extends never
@@ -94,9 +98,18 @@ export type IntersectIfDefined<TType, TWith> = TType extends IsSet
     ? TType
     : Simplify<TType & TWith>;
 
-export type DefaultValue<TValue, TFallback> = TValue extends IsSet
-  ? TFallback
-  : TValue;
+export type DefaultValue<
+  TValue,
+  TFallback,
+  Marker = IsUnset,
+> = TValue extends Marker ? TFallback : TValue;
+
+export type DefaultSchema<TValue, TFallback> =
+  DefaultValue<TValue, TFallback, IsUnset> extends infer R
+    ? R extends TSchema
+      ? Static<R>
+      : R
+    : never;
 
 export type StringKey<K extends string | number | symbol> = K extends
   | string

@@ -1,6 +1,6 @@
 import { MaybePromise } from "@trpc/server/unstable-core-do-not-import";
 
-import type { ValidPath } from "./http-path-types";
+import type { ValidPath } from "./http-path";
 import type {
   HTTPDelete,
   HTTPGet,

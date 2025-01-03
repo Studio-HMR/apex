@@ -1,9 +1,5 @@
-import type { Static, TSchema } from "@sinclair/typebox";
-import { Type } from "@sinclair/typebox";
-import type { Request, Response } from "express";
-import express from "express";
-
-import { HTTPMethod, SwitchHTTPMethod } from "./core/http-types";
+import type { Request, Response } from "ultimate-express";
+import express from "ultimate-express";
 
 type CreateCtxArgs = {
   req: Request;
@@ -94,9 +90,25 @@ class ApexBuilder<
   create() {
     const app = express();
 
-    for (const [key, value] of Object.entries(this.params.expressAppSettings)) {
+    const fixedExpressAppSettings = {
+      "case sensitive routing": true,
+      "strict routing": true,
+      "x-powered-by": false,
+    };
+
+    for (const [key, value] of Object.entries({
+      ...this.params.expressAppSettings,
+      ...fixedExpressAppSettings,
+    })) {
       app.set(key, value);
     }
+
+    app.use((_, res, next) => {
+      res.setHeader("x-powered-by", "ap-express");
+      next();
+    });
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true, limit: "4mb" }));
 
     return {
       _expressApp: app,
@@ -114,23 +126,11 @@ class ApexBuilder<
   }
 }
 
-// const apexInit = new ApexBuilder();
-
-// const apex = apexInit
-//   .context(({ req, res }) => {
-//     return {
-//       ip: req.ip,
-//     };
-//   })
-//   .create();
-
-// apex.get("/", (ctx) => {
-//   return ctx.ip;
-// });
-
-// (async () => {
-//   apex.listen();
-//   const res = await fetch("http://localhost:3000/");
-//   const json = await res.json();
-//   console.log(json);
-// })();
+const app = express();
+app.set("name", "asdf");
+app.use((req, res, next) => {
+  res.json({ message: "hello" });
+});
+app.listen(3000, () => {
+  console.log("up");
+});

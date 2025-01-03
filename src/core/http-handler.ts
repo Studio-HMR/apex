@@ -2,7 +2,7 @@ import { Static, TObject, TSchema, Type } from "@sinclair/typebox";
 
 import { DotNotationPrim, DotNotationType } from "../utils/json-path";
 import { MaybePromise, SetMarker, UnsetMarker } from "../utils/types";
-import { PathParams, ToValidPath, ValidPath } from "./http-path-types";
+import { PathParams, ToValidPath, ValidPath } from "./http-path";
 import { HTTPGet, HTTPMethod, HTTPPost } from "./http-types";
 
 // apex.scheme().controller("", ({ get, post, put, delete, input, output, use, route }) => {

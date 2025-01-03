@@ -9,7 +9,7 @@ import {
   UnsetMarker,
 } from "../utils/types";
 import { AnyHTTPHandler, HTTPHandler } from "./http-handler-types";
-import { PathParams, ValidPath } from "./http-path-types";
+import { PathParams, ValidPath } from "./http-path";
 import { HTTPMethod } from "./http-types";
 
 export interface HandlerCallOptions<Path extends ValidPath, Ctx> {

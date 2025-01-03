@@ -22,15 +22,15 @@ export type IsUnset = typeof UnsetMarker;
 
 const SYMBOL_MAP = {
   utils: {
-    set: SetMarker,
-    unset: UnsetMarker,
+    set: "SET",
+    unset: "UNSET",
   },
   middleware: {
-    layer: LayerMiddleware,
-    parser: ParserMiddleware,
-    security: SecurityMiddleware,
-    serializer: SerializerMiddleware,
-    error: ErrorHandlerMiddleware,
+    layer: "layer",
+    parser: "parser",
+    security: "security",
+    serializer: "serializer",
+    error: "error",
   },
 } as const;
 

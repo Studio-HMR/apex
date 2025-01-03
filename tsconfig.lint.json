@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/**/*", "*.config.mjs", "express.d.ts"],
+  "include": ["src/**/*", "*.config.mjs"],
 }
