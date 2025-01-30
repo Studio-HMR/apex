@@ -1,3 +1,4 @@
+import { TSchema } from "@sinclair/typebox";
 import type { Request, Response } from "ultimate-express";
 import express from "ultimate-express";
 
@@ -126,11 +127,6 @@ class ApexBuilder<
   }
 }
 
-const app = express();
-app.set("name", "asdf");
-app.use((req, res, next) => {
-  res.json({ message: "hello" });
-});
-app.listen(3000, () => {
-  console.log("up");
-});
+const appMake = {
+  controller: (def: {}, _def?: {}) => {},
+};

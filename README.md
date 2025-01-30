@@ -1,6 +1,8 @@
-# tAPI
+# Apex
 
-A typesafe server toolkit for building OpenAPI compliant HTTP(S) apps. Uses [`ultimate-express`](https://github.com/dimdenGD/ultimate-express) (built using [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js/)) and [TypeBox](https://github.com/sinclairzx81/typebox) under the hood.
+> I'm trying to find a less edgy name. Sorry. It'll take some time.
+
+A typesafe server toolkit for building OpenAPI/ REST compliant HTTP(S) apps. Uses [`ultimate-express`](https://github.com/dimdenGD/ultimate-express) (built using [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js/)) and [TypeBox](https://github.com/sinclairzx81/typebox) under the hood.
 
 ## Impetus
 
