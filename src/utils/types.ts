@@ -1,6 +1,6 @@
 import { Static, TSchema } from "@sinclair/typebox";
 
-import type { IsSet, IsUnset } from "./symbol";
+import type { SetMarker, UnsetMarker } from "./symbol";
 
 export type Primitive =
   | string
@@ -92,20 +92,20 @@ export type InvertKeyValue<TType extends Record<PropertyKey, PropertyKey>> = {
   [TValue in TType[keyof TType]]: KeyFromValue<TValue, TType>;
 };
 
-export type IntersectIfDefined<TType, TWith> = TType extends IsSet
+export type IntersectIfDefined<TType, TWith> = TType extends SetMarker
   ? TWith
-  : TWith extends IsSet
+  : TWith extends SetMarker
     ? TType
     : Simplify<TType & TWith>;
 
 export type DefaultValue<
   TValue,
   TFallback,
-  Marker = IsUnset,
+  Marker = UnsetMarker,
 > = TValue extends Marker ? TFallback : TValue;
 
 export type DefaultSchema<TValue, TFallback> =
-  DefaultValue<TValue, TFallback, IsUnset> extends infer R
+  DefaultValue<TValue, TFallback, UnsetMarker> extends infer R
     ? R extends TSchema
       ? Static<R>
       : R
