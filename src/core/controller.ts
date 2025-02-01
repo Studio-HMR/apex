@@ -17,9 +17,36 @@ interface ControllerDef<
   };
 }
 
-interface BuiltControllerDef {
-  input: unknown;
+export interface BuiltControllerDef {
+  schema: unknown;
+  basePath: unknown;
 }
+
+export interface Controller<
+  Def extends BuiltControllerDef,
+  Routes extends Record<string, any>,
+> {
+  _def: {
+    $types: {
+      path: Def["basePath"];
+      schema: Def["schema"];
+    };
+    meta: unknown;
+  };
+  _routes: Routes;
+}
+export type AnyController = Controller<BuiltControllerDef, any>;
+
+export type inferControllerTypes<$Controller> =
+  $Controller extends AnyController ? $Controller["_def"]["$types"] : never;
+export type inferControllerPath<$Controller extends AnyController> =
+  undefined extends inferControllerTypes<$Controller>["path"]
+    ? void | inferControllerTypes<$Controller>["path"]
+    : inferControllerTypes<$Controller>["path"];
+export type inferControllerSchema<$Controller extends AnyController> =
+  undefined extends inferControllerTypes<$Controller>["schema"]
+    ? void | inferControllerTypes<$Controller>["schema"]
+    : inferControllerTypes<$Controller>["schema"];
 
 type ControllerBuilder = {
   _def: ControllerDef;

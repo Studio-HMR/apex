@@ -1,3 +1,9 @@
+import {
+  DefaultSchema,
+  MaybePromise,
+  Overwrite,
+  Simplify,
+} from "../utils/types";
 import { PathParams, QueryParams, ValidPath } from "./http-path";
 import { HTTPMethod } from "./http-types";
 
@@ -53,3 +59,17 @@ export type inferRouteInput<$Route extends AnyRoute> =
     : inferRouteTypes<$Route>["input"];
 export type inferRouteOutput<$Route extends AnyRoute> =
   inferRouteTypes<$Route>["output"];
+
+export type HandlerFn<
+  Context,
+  ContextOverrides,
+  Meta,
+  Method extends HTTPMethod,
+  Path extends ValidPath,
+  Input,
+  Output,
+> = {
+  (args: {
+    ctx: Simplify<Overwrite<Context, ContextOverrides>>;
+  }): MaybePromise<Output>;
+};
