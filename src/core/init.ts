@@ -2,6 +2,8 @@ import { TSchema, Type } from "@sinclair/typebox";
 
 import { MaybePromise } from "../utils/types";
 import { SecurityScheme } from "./oapi-security";
+import { createCrudBuilder } from "./crud-builder";
+import { ValidPath } from "./http-path";
 
 type CreateContextFn<Ctx extends object> = (
   req: Request,
@@ -66,9 +68,15 @@ export class Apex<
 
   init() {
     return {
-      CRUD: {},
-      controller: (path?: string) => {},
+      CRUD: createCrudBuilder({}, "/"),
+      controller: <ControllerPath extends ValidPath>(path: ControllerPath = "/" as ControllerPath) => {},
       middleware: () => {},
     };
   }
 }
+
+const d = new Apex().context<{ asdf: string }>().meta<{ openapi: string }>().schemes({}).models({}).init();
+
+const f = d.CRUD.GET("/user").input(Type.Object({ a: Type.String() })).output(Type.Object({})).handler(({ input }) => {
+  return {};
+});

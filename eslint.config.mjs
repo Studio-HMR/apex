@@ -1,10 +1,7 @@
-import tsx from "@tilli-pro/eslint-config/tsx-base.mjs";
+import base from "@tilli-pro/eslint-config/base";
 
-/**
- * @type {import("eslint").Linter.FlatConfig}
- */
 export default [
-  ...tsx,
+  ...base,
   {
     languageOptions: {
       parserOptions: {
@@ -13,6 +10,8 @@ export default [
     },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      // This rule is broken in current version of eslint-config
+      "@typescript-eslint/no-unused-expressions": "off"
     },
   },
 ];

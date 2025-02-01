@@ -15,11 +15,15 @@ const symbolPrefix =
 
 export const apexSym = (symbol: string) => `${symbolPrefix}_${symbol}`;
 
-export const SetMarker = Symbol(apexSym("SET"));
-export type IsSet = typeof SetMarker;
-export const UnsetMarker = Symbol(apexSym("UNSET"));
-export type IsUnset = typeof UnsetMarker;
+export const SetSym = Symbol(apexSym("SET"));
+export type SetMarker = typeof SetSym;
+export type IfSet<Value, CaseSet = Value, CaseNotSet = undefined> = Value extends SetMarker ? CaseSet : CaseNotSet;
 
+export const UnsetSym = Symbol(apexSym("UNSET"));
+export type UnsetMarker = typeof UnsetSym;
+export type IfUnset<Value, CaseUnset = undefined, CaseNotUnset = Value> = Value extends UnsetMarker ? CaseUnset : CaseNotUnset;
+
+// TODO: blow all of this up and remove anywhere it is used
 const SYMBOL_MAP = {
   utils: {
     set: "SET",

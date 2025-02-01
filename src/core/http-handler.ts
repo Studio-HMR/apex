@@ -1,329 +1,108 @@
-import { Static, TObject, TSchema, Type } from "@sinclair/typebox";
+import { Static, TSchema } from "@sinclair/typebox";
+import { IfUnset, UnsetMarker } from "../utils/symbol";
+import { MaybePromise, Overwrite, Simplify, mergeWithoutOverrides } from "../utils/types";
+import { PathParams, QueryParams, ValidPath } from "./http-path";
+import { HTTPMethod } from "./http-types";
 
-import { DotNotationPrim, DotNotationType } from "../utils/json-path";
-import { MaybePromise, SetMarker, UnsetMarker } from "../utils/types";
-import { PathParams, ToValidPath, ValidPath } from "./http-path";
-import { HTTPGet, HTTPMethod, HTTPPost } from "./http-types";
+export interface BuiltHandlerDef {
+  input: unknown;
+  output: unknown;
+}
 
-// apex.scheme().controller("", ({ get, post, put, delete, input, output, use, route }) => {
-//   asdf: use().input().output().get(({ ctx, input, query, params }) => {})
-// })
-
-const buildNewController = <Context, Meta>(_def?: AnyControllerDef) => {
-  const newDef = _def
-    ? {
-        ..._def,
-      }
-    : {};
-
-  return {
-    _def: {},
-    scheme: <NewSchema extends TSchema>(schema: NewSchema) => {
-      return {
-        controller: () => {},
-      };
-    },
-    controller: <
-      Path extends ValidPath,
-      RouterDef extends Record<string, AnyRouteDefBuilder>,
-    >(
-      pathOrRouteDef: Path | ((routerDefiners: { get: () => {} }) => {}),
-      routerDef?: (
-        routeDefiners: RouteDefBuilder<
-          "/",
-          Context,
-          Meta,
-          unknown,
-          unknown,
-          unknown,
-          unknown
-        >,
-      ) => {},
-    ) => {},
-  };
-};
-
-type ControllerDefBuilder<
-  Path extends ValidPath,
-  Schema extends TSchema | UnsetMarker,
-  Context,
-  Meta,
-  Def extends AnyControllerDef,
-> = {
-  _def: Def;
-  scheme: Schema extends UnsetMarker
-    ? <NewSchema extends TSchema>(
-        schema: NewSchema,
-      ) => ControllerDefBuilder<Path, NewSchema, Context, Meta, Def>
-    : never;
-  controller: ControllerHandler<Path, Schema, Context, Meta>;
-};
-
-type AnyControllerDefBuilder = ControllerDefBuilder<
-  ValidPath,
-  any,
-  any,
-  any,
-  any
->;
-
-type ControllerDef<
-  Path extends ValidPath,
-  Schema extends TSchema | UnsetMarker,
-  Context,
-  Meta,
-  RouteDef extends AnyRouterDef,
-> = {
-  $path: Path;
-  $router: RouteDef;
-  $types: {
-    ctx: Context;
-    meta: Meta;
-    input: Schema extends UnsetMarker ? TObject : Schema;
-    output: Schema extends UnsetMarker ? TObject : Schema;
-  };
-};
-
-type AnyControllerDef = ControllerDef<ValidPath, any, any, any, any>;
-type AnyRouterDef = Record<string, AnyRouteDefBuilder | AnyControllerDef>;
-
-type ControllerHandler<
-  Path extends ValidPath,
-  Schema extends TSchema | UnsetMarker,
-  Context,
-  Meta,
-> = {
-  <RouterDef extends AnyRouterDef>(
-    path: Path,
-    routerDef: (
-      builder: RouteDefBuilder<
-        Path,
-        Context,
-        Meta,
-        Schema,
-        UnsetMarker,
-        Schema,
-        UnsetMarker
-      >,
-    ) => RouterDef,
-  ): ControllerDef<Path, Schema, Context, Meta, RouterDef>;
-  <RouterDef extends AnyRouterDef>(
-    routerDef: (
-      builder: RouteDefBuilder<
-        "/",
-        Context,
-        Meta,
-        Schema,
-        UnsetMarker,
-        Schema,
-        UnsetMarker
-      >,
-    ) => RouterDef,
-  ): ControllerDef<Path, Schema, Context, Meta, RouterDef>;
-};
-
-type RouteDef = {};
-
-type RouteHandlerDef<
-  Path extends ValidPath,
-  Method extends HTTPMethod,
-  Context,
-  Meta,
-  Input,
-  Output,
-> = {
-  $route: {
+export interface Handler<Path extends ValidPath, Def extends BuiltHandlerDef> {
+  _def: {
     path: Path;
-    method: Method;
+    $types: {
+      input: Def["input"];
+      output: Def["output"];
+    };
   };
-  $types: {
-    ctx: Context;
-    meta: Meta;
-    input: Input extends TSchema ? Input : never;
-    output: Output extends TSchema ? Output : never;
-  };
-};
+}
 
-type BaseQuery<Schema extends TSchema> = {
-  [K in keyof Static<Schema>]?: Static<Schema>[K];
-};
+export type AnyHandler = Handler<any, any>;
 
-type DotNotationQuery<Schema extends TObject> = {
-  [K in DotNotationPrim<Static<Schema>>]?: DotNotationType<Static<Schema>, K>;
-};
-
-type Query<Schema extends TObject> = BaseQuery<Schema> &
-  DotNotationQuery<Schema>;
-
-type Sort<Schema extends TSchema> = {
-  [K in keyof Static<Schema>]?: "asc" | "desc";
-};
-
-type Pagination = {
-  cursor: number;
-  limit: number;
-};
-
-type QueryParams<Schema extends TObject> = {
-  query: Query<Schema>;
-  sort: Sort<Schema>;
-  pagination?: Pagination;
-};
-
-type RouteHandlerOpts<Path extends ValidPath, Context, Input> = {
+export interface HandlerOptions<Path extends ValidPath, Method extends HTTPMethod, Context, Meta, ContextOverrides, Input, Output> {
   path: Path;
-  ctx: Context;
-  input: Input extends TSchema ? Input : never;
+  method: Method;
   params: PathParams<Path>;
-  query: Input extends TSchema
-    ? Input extends TObject
-      ? QueryParams<Input>
-      : string
-    : never;
-};
+  query: QueryParams<Path>;
+  ctx: Simplify<Overwrite<Context, ContextOverrides>>;
+  input: IfUnset<Input, undefined, Input extends TSchema ? Static<Input> : Input>;
+  inputModel: IfUnset<Input>;
+  outputModel: IfUnset<Output>;
+  meta: Meta;
+  signal: AbortSignal | undefined;
+}
 
-type RouteHandlerFn<Path extends ValidPath, Context, Input, Output> = (
-  opts: RouteHandlerOpts<Path, Context, Input>,
-) => MaybePromise<Output>;
+export type HandlerFn<Path extends ValidPath, Method extends HTTPMethod, Context, Meta, ContextOverrides, Input, Output, $Output> = (opts: HandlerOptions<Path, Method, Context, Meta, ContextOverrides, Input, Output>) => MaybePromise<IfUnset<Output, $Output, Output extends TSchema ? Static<Output> : Output>>;
 
-type RouteHandler<
-  BasePath extends ValidPath,
-  Method extends HTTPMethod,
-  Context,
-  Meta,
-  Input,
-  Output,
-> = {
-  <Path extends ValidPath>(
-    path: Path,
-    handler: RouteHandlerFn<
-      ToValidPath<`${BasePath}${Path}`>,
-      Context,
-      Input,
-      Output
-    >,
-  ): RouteHandlerDef<
-    ToValidPath<`${BasePath}${Path}`>,
-    Method,
-    Context,
-    Meta,
-    Input,
-    Output
-  >;
-  (
-    handler: RouteHandlerFn<BasePath, Context, Input, Output>,
-  ): RouteHandlerDef<BasePath, Method, Context, Meta, Input, Output>;
-};
+export type AnyHandlerFn = HandlerFn<any, any, any, any, any, any, any, any>;
 
-type InputDef<
-  BasePath extends ValidPath,
-  Context,
-  Meta,
-  Input,
-  InputOverride,
-  Output,
-  OutputOverride,
-> = InputOverride extends UnsetMarker
-  ? {
-      input: <NewInput>(
-        schema: NewInput,
-      ) => RouteDefBuilder<
-        BasePath,
-        Context,
-        Meta,
-        Input,
-        NewInput,
-        Output,
-        OutputOverride
-      >;
+export type HandlerBuilderDef<Path extends ValidPath, Method extends HTTPMethod, Meta> = {
+  path: Path;
+  method: Method;
+  middlewares: any[];
+  inputModel?: TSchema;
+  outputModel?: TSchema;
+  meta?: Meta;
+}
+type AnyHandlerBuilderDef = HandlerBuilderDef<any, any, any>;
+
+export interface HandlerBuilder<Path extends ValidPath, Method extends HTTPMethod, Context, Meta, ContextOverrides, Input, Output, THandler extends boolean> {
+  input: IfUnset<Input, <$InputSchema extends TSchema>(schema: $InputSchema) => HandlerBuilder<Path, Method, Context, Meta, ContextOverrides, $InputSchema, Output, THandler>, never>;
+  output: IfUnset<Output, <$OutputSchema extends TSchema>(schema: $OutputSchema) => HandlerBuilder<Path, Method, Context, Meta, ContextOverrides, Input, $OutputSchema, THandler>, never>;
+  meta(meta: Meta): HandlerBuilder<Path, Method, Context, Meta, ContextOverrides, Input, Output, THandler>;
+  use<$NewContextOverrides>(fn: any): HandlerBuilder<Path, Method, Context, Meta, Overwrite<ContextOverrides, $NewContextOverrides>, Input, Output, THandler>;
+  handler<$Output>(fn: HandlerFn<Path, Method, Context, Meta, ContextOverrides, Input, Output, $Output>): Handler<Path, { input: Input, output: IfUnset<Output, $Output> }>;
+  _def: HandlerBuilderDef<Path, Method, Meta>;
+}
+
+export type AnyHandlerBuilder = HandlerBuilder<any, any, any, any, any, any, any, any>;
+
+export function createNewHandlerBuilder(def1: AnyHandlerBuilderDef, def2: Partial<AnyHandlerBuilderDef>): AnyHandlerBuilder {
+  const { middlewares = [], meta, ...rest } = def2;
+
+  return createHandlerBuilder(def1.path, def1.method, {
+    ...mergeWithoutOverrides(def1, rest),
+    middlewares: [...def1.middlewares, ...middlewares],
+    meta: def1.meta && meta ? { ...def1.meta, ...meta } : (meta ?? def1.meta)
+  })
+}
+
+export function createHandlerBuilder<$Path extends ValidPath, $Method extends HTTPMethod, Context, Meta>(path: $Path, method: $Method, initDef: Partial<AnyHandlerBuilderDef>): HandlerBuilder<$Path, $Method, Context, Meta, object, UnsetMarker, UnsetMarker, false> {
+  const handler: AnyHandlerBuilderDef = {
+    path,
+    method,
+    middlewares: [],
+    ...initDef,
+  }
+
+  const builder: AnyHandlerBuilder = {
+    _def: handler,
+    input(schema) {
+      return createNewHandlerBuilder(handler, { inputModel: schema });
+    },
+    output(schema) {
+      return createNewHandlerBuilder(handler, { outputModel: schema });
+    },
+    meta(meta) {
+      return createNewHandlerBuilder(handler, { meta });
+    },
+    use(fn) {
+      return createNewHandlerBuilder(handler, { middlewares: [fn] });
+    },
+    handler(fn) {
+      return {
+        _def: {
+          path,
+          $types: {
+            input: handler.inputModel,
+            output: handler.outputModel,
+          },
+        },
+      }
     }
-  : {};
+  }
 
-type OutputDef<
-  BasePath extends ValidPath,
-  Context,
-  Meta,
-  Input,
-  InputOverride,
-  Output,
-  OutputOverride,
-> = OutputOverride extends UnsetMarker
-  ? {
-      output: <NewOutput>(
-        schema: NewOutput,
-      ) => RouteDefBuilder<
-        BasePath,
-        Context,
-        Meta,
-        Input,
-        InputOverride,
-        Output,
-        NewOutput
-      >;
-    }
-  : {};
-
-type HTTPHandlerDef<
-  BasePath extends ValidPath,
-  Context,
-  Meta,
-  Input,
-  InputOverride,
-  Output,
-  OutputOverride,
-> = {
-  [Method in Lowercase<HTTPMethod>]: RouteHandler<
-    BasePath,
-    Uppercase<Method>,
-    Context,
-    Meta,
-    InputOverride extends UnsetMarker ? Input : InputOverride,
-    OutputOverride extends UnsetMarker ? Output : OutputOverride
-  >;
-};
-
-type RouteDefBuilder<
-  BasePath extends ValidPath,
-  Context,
-  Meta,
-  Input,
-  InputOverride,
-  Output,
-  OutputOverride,
-> = HTTPHandlerDef<
-  BasePath,
-  Context,
-  Meta,
-  Input,
-  InputOverride,
-  Output,
-  OutputOverride
-> &
-  InputDef<
-    BasePath,
-    Context,
-    Meta,
-    Input,
-    InputOverride,
-    Output,
-    OutputOverride
-  > &
-  OutputDef<
-    BasePath,
-    Context,
-    Meta,
-    Input,
-    InputOverride,
-    Output,
-    OutputOverride
-  >;
-
-type AnyRouteDefBuilder = RouteDefBuilder<
-  ValidPath,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any
->;
+  return builder;
+}

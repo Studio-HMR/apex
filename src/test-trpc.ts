@@ -15,9 +15,12 @@ const f = p
     }),
   )
   .output(z.string())
-  .query(({ input }) => {
-    input;
+  .query(({ input, ctx, ...a }) => {
     return {
-      f: "",
-    } as { f: string } & string;
+      f: ""
+    } as string & { f: string };
   });
+
+const m = trpc.middleware(({ next }) => {
+  return next({ ctx: { asdf: "?" } });
+})

@@ -1,0 +1,15 @@
+diff --git a/dist/base.js b/dist/base.js
+index cfd60a665fb366ed153c464c0a1822771235d8dc..c7b92f4398f6536ad8983ef0e121b1f5e611450b 100644
+--- a/dist/base.js
++++ b/dist/base.js
+@@ -30,8 +30,8 @@ export const restrictEnvAccess = tseslint.config({ ignores: ["**/{_,}env.{js,ts}
+     },
+ });
+ export default tseslint.config(
+-/** ignore files not tracked by VCS + any config files */
+-includeIgnoreFile(path.join(import.meta.dirname, "../../../../.gitignore")), { ignores: ["**/*.config.*"] }, {
++    /** ignore files not tracked by VCS + any config files */
++    { ignores: ["**/*.config.*"] }, {
+     files: ["**/*.js", "**/*.ts", "**/*.tsx"],
+     ignores: ["**/dist/**/*.js"],
+     plugins: {
