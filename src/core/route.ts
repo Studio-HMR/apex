@@ -1,11 +1,7 @@
-import {
-  DefaultSchema,
-  MaybePromise,
-  Overwrite,
-  Simplify,
-} from "../utils/types";
-import { PathParams, QueryParams, ValidPath } from "./http-path";
-import { HTTPMethod } from "./http-types";
+import type { MaybePromise, Overwrite, Simplify } from "../utils/types";
+import type { PathParams, QueryParams, ValidPath } from "./http-path";
+import type { HTTPMethod } from "./http-types";
+import { DefaultSchema } from "../utils/types";
 
 type RouteContext = Record<string, unknown>;
 
@@ -68,8 +64,6 @@ export type HandlerFn<
   Path extends ValidPath,
   Input,
   Output,
-> = {
-  (args: {
-    ctx: Simplify<Overwrite<Context, ContextOverrides>>;
-  }): MaybePromise<Output>;
-};
+> = (args: {
+  ctx: Simplify<Overwrite<Context, ContextOverrides>>;
+}) => MaybePromise<Output>;

@@ -1,12 +1,12 @@
 import type { TSchema } from "@sinclair/typebox";
-import { Simplify } from "@trpc/server/unstable-core-do-not-import";
+import type { Simplify } from "@trpc/server/unstable-core-do-not-import";
 
-import { IsUnset } from "../utils/symbol";
-import { DefaultSchema, MaybePromise, Overwrite } from "../utils/types";
-import { ValidPath } from "./http-path";
-import { HTTPMethod } from "./http-types";
-import { AnyMiddleware } from "./middleware";
-import { AnyRoute, Route, RouteCallOptions } from "./route";
+import type { UnsetMarker } from "../utils/symbol";
+import type { DefaultSchema, MaybePromise, Overwrite } from "../utils/types";
+import type { ValidPath } from "./http-path";
+import type { HTTPMethod } from "./http-types";
+import type { AnyMiddleware } from "./middleware";
+import type { AnyRoute, Route, RouteCallOptions } from "./route";
 
 export type CallerOverride<$Context> = (opts: {
   args: unknown[];
@@ -37,7 +37,7 @@ export interface RouteResolverOptions<
   $Input,
 > {
   ctx: Simplify<Overwrite<$Context, $ContextOverrides>>;
-  input: $Input extends IsUnset ? undefined : $Input;
+  input: $Input extends UnsetMarker ? undefined : $Input;
   signal: AbortSignal | undefined;
 }
 
@@ -89,7 +89,7 @@ export type inferRouteBuilderResolverOptions<
         $Meta,
         $ContextOverrides,
         {},
-        $Input extends IsUnset ? unknown : $Input
+        $Input extends UnsetMarker ? unknown : $Input
       >
     : never;
 
@@ -103,7 +103,7 @@ export interface RouteBuilder<
   $Output,
   $Caller extends boolean,
 > {
-  input: $Input extends IsUnset
+  input: $Input extends UnsetMarker
     ? <Schema extends TSchema>(
         schema: Schema,
       ) => RouteBuilder<
@@ -117,7 +117,7 @@ export interface RouteBuilder<
         $Caller
       >
     : undefined;
-  output: $Output extends IsUnset
+  output: $Output extends UnsetMarker
     ? <Schema extends TSchema>(
         schema: Schema,
       ) => RouteBuilder<
@@ -211,8 +211,8 @@ export function createRouteBuilder<
   $Context,
   $Meta,
   object,
-  IsUnset,
-  IsUnset,
+  UnsetMarker,
+  UnsetMarker,
   false
 > {
   const _def: AnyRouteBuilderDef = {

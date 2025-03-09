@@ -1,4 +1,4 @@
-import { Static, TSchema } from "@sinclair/typebox";
+import type { Static, TSchema } from "@sinclair/typebox";
 
 import type { SetMarker, UnsetMarker } from "./symbol";
 
@@ -59,9 +59,9 @@ export type Overwrite<TType, TWith> = TWith extends any
             ? TType[K]
             : never;
       } & (string extends keyof TWith // Handle cases with an index signature
-        ? { [key: string]: TWith[string] }
+        ? Record<string, TWith[string]>
         : number extends keyof TWith
-          ? { [key: number]: TWith[number] }
+          ? Record<number, TWith[number]>
           : {})
     : TWith
   : never;
@@ -125,7 +125,7 @@ export type JsonPaths<
 > = {
   [K in keyof T]: T[K] extends Primitive
     ? `${Prefix}${StringKey<K>}`
-    : T[K] extends Array<infer S>
+    : T[K] extends (infer S)[]
       ? S extends Primitive | Date
         ? `${Prefix}${StringKey<K>}${Separator}[]`
         : S extends Record<string, unknown>

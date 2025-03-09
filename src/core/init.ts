@@ -1,9 +1,14 @@
-import { TSchema, Type } from "@sinclair/typebox";
+import type { TSchema } from "@sinclair/typebox";
+import { Type } from "@sinclair/typebox";
 
-import { MaybePromise } from "../utils/types";
-import { SecurityScheme } from "./oapi-security";
+import type { MaybePromise } from "../utils/types";
+import type { AnyController } from "./controller-builder";
+import type { ValidPath } from "./http-path";
+import type { SecurityScheme } from "./oapi-security";
+import type { ApexStartOpts } from "./start";
+import { createControllerBuilder } from "./controller-builder";
 import { createCrudBuilder } from "./crud-builder";
-import { ValidPath } from "./http-path";
+import { startServer } from "./start";
 
 type CreateContextFn<Ctx extends object> = (
   req: Request,
@@ -16,9 +21,9 @@ export class Apex<
   Schemes extends Record<string, SecurityScheme> | undefined,
   Models extends Record<string, TSchema> | undefined,
 > {
-  createContext: CreateContextFn<Context> | undefined = undefined;
-  securitySchemes: Schemes = undefined as Schemes;
-  modelSchemes: Models = undefined as Models;
+  private createContext: CreateContextFn<Context> | undefined = undefined;
+  private securitySchemes: Schemes = undefined as Schemes;
+  private modelSchemes: Models = undefined as Models;
 
   constructor(
     createContext?: CreateContextFn<Context>,
@@ -68,15 +73,46 @@ export class Apex<
 
   init() {
     return {
-      CRUD: createCrudBuilder({}, "/"),
-      controller: <ControllerPath extends ValidPath>(path: ControllerPath = "/" as ControllerPath) => {},
+      HTTP: createCrudBuilder<undefined, Context, Meta>({}, undefined),
+      controller: <ControllerPath extends ValidPath>(
+        controllerPath: ControllerPath = "/" as ControllerPath,
+      ) => createControllerBuilder<ControllerPath, Context, {}>(controllerPath),
       middleware: () => {},
     };
   }
+
+  startServer(controllerDef: AnyController, port: number, opts: ApexStartOpts) {
+    if (!this.createContext) {
+      throw new Error("Context function is not defined");
+    }
+    return startServer(controllerDef, port, opts, this.createContext);
+  }
 }
 
-const d = new Apex().context<{ asdf: string }>().meta<{ openapi: string }>().schemes({}).models({}).init();
+const apexSingletonInstance = new Apex()
+  .context<{ asdf: string }>()
+  .meta<{ asdf2: string }>();
 
-const f = d.CRUD.GET("/user").input(Type.Object({ a: Type.String() })).output(Type.Object({})).handler(({ input }) => {
-  return {};
-});
+const f = apexSingletonInstance.init();
+const g = f.HTTP.GET("/:id")
+  .input(Type.String())
+  .output(Type.String())
+  .pathParams(
+    Type.Object({
+      f: Type.String(),
+      id: Type.String(),
+    }),
+  )
+  .handler(async ({ ctx, meta }) => {
+    return "";
+  });
+
+const m = f
+  .controller("/users")
+  .use(() => {})
+  .routes({
+    swag: f.controller("/swag").routes({
+      c: f.HTTP.DELETE("/:id").handler(() => {}),
+    }),
+    p: g,
+  });

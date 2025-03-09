@@ -27,24 +27,53 @@ export type PathParam<Path extends string> =
       ? PathParam<Head>
       : Path extends `/${infer Tail}`
         ? PathParam<Tail>
-        : Path extends `:${infer Param}`
+        : Path extends `:${infer Param}?${string}`
           ? Param
-          : never;
+          : Path extends `:${infer Param}&${string}`
+            ? Param
+            : Path extends `:${infer Param}`
+              ? Param
+              : never;
 
 export type PathParams<Path extends string> = {
   [key in PathParam<Path>]: string;
 };
 
+type TypedPrimitiveQueryParams = {
+  string: string;
+  number: number;
+  int: number;
+  float: number;
+  decimal: number;
+  double: number;
+  boolean: boolean;
+  date: Date;
+  isoDate: Date;
+  epochDate: Date;
+  object: Record<string, unknown>;
+};
+
+type ArrayQueryParams<Param extends string> = Param extends `[${infer Type}]`
+  ? Type extends keyof TypedPrimitiveQueryParams
+    ? TypedPrimitiveQueryParams[Type][]
+    : unknown
+  : unknown;
+
+type TypedQueryParams<Param extends string> =
+  Param extends keyof TypedPrimitiveQueryParams
+    ? TypedPrimitiveQueryParams[Param]
+    : ArrayQueryParams<Param>;
+
 export type QueryParams<Path extends string> =
   Path extends `${string}?${infer Tail}`
     ? Tail extends `${infer Key}=${infer Value}&${infer Rest}`
-      ? { [key in Key]: Value } & QueryParams<`?${Rest}`>
+      ? { [key in Key]: TypedQueryParams<Value> } & QueryParams<`?${Rest}`>
       : Tail extends `${infer LoneKey}&${infer Rest}`
-        ? { [key in LoneKey]: true } & QueryParams<`?${Rest}`>
+        ? { [key in LoneKey]: unknown } & QueryParams<`?${Rest}`>
         : Tail extends `${infer LastKey}=${infer LastValue}`
-          ? { [key in LastKey]: LastValue }
+          ? { [key in LastKey]: TypedQueryParams<LastValue> }
           : Tail extends `${infer LoneLastKey}`
-            ? { [key in LoneLastKey]: true }
+            ? { [key in LoneLastKey]: unknown }
             : never
     : never;
 

@@ -1,6 +1,10 @@
-import { TSchema } from "@sinclair/typebox";
 import type { Request, Response } from "ultimate-express";
+import { TSchema, Type } from "@sinclair/typebox";
 import express from "ultimate-express";
+
+import { registerModel } from "./models/register";
+
+registerModel(Type.Object({}), {});
 
 type CreateCtxArgs = {
   req: Request;

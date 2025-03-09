@@ -1,9 +1,9 @@
 export type HTTPAll = "ALL";
 
-export const httpGET = "GET" as const;
-export const httpPOST = "POST" as const;
-export const httpPUT = "PUT" as const;
-export const httpDELETE = "DELETE" as const;
+export const httpGET = "GET";
+export const httpPOST = "POST";
+export const httpPUT = "PUT";
+export const httpDELETE = "DELETE";
 export const httpTypes = [httpGET, httpPOST, httpPUT, httpDELETE] as const;
 
 /**

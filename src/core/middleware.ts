@@ -1,10 +1,10 @@
 import { TSchema, Type } from "@sinclair/typebox";
 
-import { ApexError, ErrorCode } from "../error/codes";
+import type { ApexError, ErrorCode } from "../error/codes";
+import type { Overwrite, Rewrite } from "../utils/types";
+import type { ValidPath } from "./http-path";
+import type { HTTPMethod } from "./http-types";
 import { apexSym } from "../utils/symbol";
-import { Overwrite, Rewrite } from "../utils/types";
-import { ValidPath } from "./http-path";
-import { HTTPMethod } from "./http-types";
 
 /**
  * Used for handling security schemas (as in the `securityScheme` OpenAPI concept). Should always be the first middleware(s) in the chain if present.
