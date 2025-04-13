@@ -43,9 +43,9 @@ export const startServer = async <Context>(
   const controller = await createControllerRoutes(controllerDef);
   app.use(controllerDef._def.path as string, controller);
 
-  app.use((err, req, res, next) => {
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
-    return res.status(500).json({
+    res.status(500).json({
       message: "Internal Server Error",
       error: err.message,
     });
